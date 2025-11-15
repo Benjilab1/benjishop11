@@ -1,0 +1,8 @@
+{
+  "name": "benjishop",
+  "version": "1.0.0",
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "@netlify/blobs": "^6.6.0"
+  }
+}

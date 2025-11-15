@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BenjiShop — BrainRot</title>
+  <meta name="description" content="Boutique BrainRot — choisis un perso et découvre les items à vendre.">
+
+  <style>
+    :root{
+      --bg:#02030a;
+      --card-bg:#050714;
+      --brand:#00f5ff;
+      --brand-soft:#00f5ff33;
+      --text:#f6f7fb;
+      --muted:#a3a7c0;
+      --radius:14px;
+      --shadow:0 10px 30px rgba(0,0,0,.6);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    html,body{
+      height:100%;
+      overflow-x:hidden;
+      font-family:"Inter","Segoe UI",Roboto,system-ui,sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+
+    /* ===== FOND ANIMÉ NOIR & BLANC ===== */
+    .bg-root{
+      position:fixed;
+      inset:0;
+      z-index:-3;
+      background:black;
+    }
+    .particles-layer{
+      position:fixed;
+      inset:0;
+      z-index:-2;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    .particle{
+      position:absolute;
+      border-radius:50%;
+      background: radial-gradient(circle, #ffffff 0%, #ffffff 40%, rgba(255,255,255,0.25) 70%, transparent 90%);
+      box-shadow:
+        0 0 12px rgba(255,255,255,1),
+        0 0 28px rgba(255,255,255,1);
+      opacity:1;
+      will-change:transform;
+    }
+
+    /* ===== HEADER ===== */
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(12px);
+      background:rgba(0,0,0,0.55);
+      border-bottom:1px solid rgba(255,255,255,0.1);
+    }
+    .nav{
+      max-width:1200px;
+      margin:0 auto;
+      padding:10px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .logo{
+      font-weight:800;
+      font-size:20px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:#999;
+    }
+    .logo b{
+      color:white;
+      text-shadow:0 0 16px white;
+    }
+    .btn-admin{
+      background:transparent;
+      border-radius:999px;
+      border:1px solid white;
+      color:white;
+      font-weight:500;
+      padding:8px 14px;
+      font-size:13px;
+      text-decoration:none;
+      transition:0.25s;
+    }
+    .btn-admin:hover{
+      background:white;
+      color:black;
+    }
+
+    /* ===== CONTENU ===== */
+    .container{
+      max-width:1200px;
+      margin:0 auto;
+      padding:22px 16px 40px;
+      position:relative;
+    }
+    .hero h1{
+      font-size:32px;
+      font-weight:800;
+      margin-bottom:8px;
+    }
+    .hero span{
+      color:white;
+      text-shadow:0 0 14px white;
+    }
+    .hero p{
+      color:#ccc;
+      font-size:14px;
+      margin-bottom:20px;
+    }
+
+    /* ===== CATÉGORIES EN GRID (4 PAR LIGNE max) ===== */
+    .cats-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+      gap:18px;
+    }
+
+    .cat-card{
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:14px;
+      cursor:pointer;
+      overflow:hidden;
+      transition:0.2s;
+      backdrop-filter:blur(8px);
+    }
+    .cat-card:hover{
+      border-color:white;
+      transform:translateY(-6px);
+      box-shadow:0 0 20px rgba(255,255,255,0.45);
+    }
+    .cat-thumb{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:black;
+    }
+    .cat-thumb img{
+      max-width:90%;
+      max-height:140px;
+      filter:drop-shadow(0 0 10px black);
+    }
+    .cat-body{
+      padding:10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .cat-name{
+      font-weight:700;
+    }
+    .cat-count{
+      color:#aaa;
+      font-size:12px;
+    }
+
+    /* ===== PRODUITS ===== */
+    .products-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+      gap:14px;
+    }
+    .card{
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:14px;
+      overflow:hidden;
+      transition:0.25s;
+    }
+    .card:hover{
+      transform:translateY(-5px);
+      border-color:white;
+      box-shadow:0 0 18px rgba(255,255,255,0.4);
+    }
+    .thumb{
+      padding:18px;
+      background:black;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .thumb img{
+      max-width:90%;
+      max-height:140px;
+    }
+    .body{
+      padding:10px 12px;
+      background:rgba(0,0,0,0.4);
+    }
+    .title{
+      font-weight:700;
+      font-size:14px;
+    }
+    .meta{
+      display:flex;
+      justify-content:space-between;
+      color:#ccc;
+      margin-top:6px;
+      font-size:13px;
+    }
+    .price{
+      color:white;
+      font-weight:800;
+    }
+    .empty{
+      padding:30px;
+      border:1px dashed rgba(255,255,255,0.2);
+      border-radius:14px;
+      text-align:center;
+      color:#aaa;
+    }
+
+    footer{
+      text-align:center;
+      padding:25px;
+      color:#777;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-root"></div>
+  <div id="particlesLayer" class="particles-layer"></div>
+
+  <header>
+    <div class="nav">
+      <div class="logo">Benji<b>Shop</b></div>
+      <a href="/orders" class="btn-admin">Mes commandes</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1><span>BrainRot</span> marketplace</h1>
+      <p>Sélectionne un perso pour voir tous les BrainRot à la vente.</p>
+    </section>
+
+    <section id="grid"></section>
+  </main>
+
+  <footer>
+    © <span id="year"></span> BenjiShop — Tous droits réservés.
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <!-- ========================================= -->
+  <!--  FOND ANIMÉ : PARTICULES ULTRA DYNAMIQUES  -->
+  <!-- ========================================= -->
+  <script>
+  (function(){
+
+    const layer = document.getElementById("particlesLayer");
+    if (!layer) return;
+
+    const COUNT = 120;          // moins nombreuses mais plus grosses
+    const BASE_SPEED = 80;      // vitesse de base rapide
+    const SCROLL_BOOST = 2200;  // boost violent au scroll
+    const MAX_SPEED = 3200;
+    const WIGGLE = 120;         // mouvement organique très visible
+
+    let W = innerWidth;
+    let H = innerHeight;
+    let last = performance.now();
+    const P = [];
+
+    const rand = (min,max)=>Math.random()*(max-min)+min;
+
+    function clamp(p){
+      const s = Math.hypot(p.vx,p.vy);
+      if(s>MAX_SPEED){
+        const k = MAX_SPEED / s;
+        p.vx *= k;
+        p.vy *= k;
+      }
+    }
+
+    function createParticles(){
+      layer.innerHTML = "";
+      P.length = 0;
+      W = innerWidth;
+      H = innerHeight;
+
+      for(let i=0;i<COUNT;i++){
+        const size = rand(10,20); // >>> grosses particules
+
+        const el = document.createElement("div");
+        el.className = "particle";
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+        layer.appendChild(el);
+
+        const angle = rand(0, Math.PI*2);
+        const speed = BASE_SPEED + rand(0, 60);
+
+        P.push({
+          el,
+          x: rand(0, W - size),
+          y: rand(0, H - size),
+          vx: Math.cos(angle)*speed,
+          vy: Math.sin(angle)*speed,
+          size
+        });
+      }
+    }
+
+    function update(dt){
+      for(const p of P){
+
+        // gros mouvement organique
+        p.vx += rand(-WIGGLE, WIGGLE) * dt;
+        p.vy += rand(-WIGGLE, WIGGLE) * dt;
+
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+
+        // rebonds
+        if(p.x <= 0){
+          p.x = 0;
+          p.vx = Math.abs(p.vx);
+        }else if(p.x + p.size >= W){
+          p.x = W - p.size;
+          p.vx = -Math.abs(p.vx);
+        }
+
+        if(p.y <= 0){
+          p.y = 0;
+          p.vy = Math.abs(p.vy);
+        }else if(p.y + p.size >= H){
+          p.y = H - p.size;
+          p.vy = -Math.abs(p.vy);
+        }
+
+        clamp(p);
+        p.el.style.transform = `translate(${p.x}px,${p.y}px)`;
+      }
+    }
+
+    function loop(now){
+      const dt = (now - last) / 1000;
+      last = now;
+      update(dt);
+      requestAnimationFrame(loop);
+    }
+
+    // scroll = explosion violente
+    window.addEventListener("scroll", () => {
+      for(const p of P){
+        const a = rand(0, Math.PI*2);
+        p.vx += Math.cos(a) * SCROLL_BOOST;
+        p.vy += Math.sin(a) * SCROLL_BOOST;
+        clamp(p);
+      }
+    }, { passive:true });
+
+    window.addEventListener("resize", () => {
+      W = innerWidth;
+      H = innerHeight;
+      for(const p of P){
+        if(p.x + p.size > W) p.x = W - p.size;
+        if(p.y + p.size > H) p.y = H - p.size;
+      }
+    });
+
+    // on lance tout une fois que la page est chargée
+    window.addEventListener("load", () => {
+      createParticles();
+      requestAnimationFrame(loop);
+    });
+
+  })();
+  </script>
+
+  <!-- SCRIPTS PRODUITS -->
+  <script src="./brainrot-names.js"></script>
+  <script type="module" src="./products.js"></script>
+</body>
+</html>

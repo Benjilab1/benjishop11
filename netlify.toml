@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  command = ""
+
+# SPA: toutes les routes renvoient index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

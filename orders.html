@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mes commandes — BenjiShop</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg:#0b0c14; --panel:#0e1020; --glass:rgba(255,255,255,.06);
+      --border:#1d2133; --text:#f6f7fb; --muted:#9aa0b4; --brand:#ffd000;
+      --r:16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(180deg,#0a0b12,#0b0c14), #0a0b12;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+    header{position:sticky;top:0;z-index:10;backdrop-filter: blur(10px);background:linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,.2));border-bottom:1px solid #151829}
+    .nav{max-width:1000px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .logo{font-weight:900;font-size:22px}
+    .logo b{color:var(--brand)}
+    .back{color:#000;background:var(--brand);padding:10px 14px;border-radius:999px;text-decoration:none;font-weight:800}
+    main{max-width:1000px;margin:0 auto;padding:26px 18px}
+    h1{font-size:28px;margin-bottom:10px}
+    p.lead{color:var(--muted);margin-bottom:18px}
+    .panel{background:linear-gradient(180deg,var(--glass),rgba(255,255,255,.03));border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px}
+    form{display:flex;gap:10px;flex-wrap:wrap}
+    input[type="text"]{flex:1;min-width:260px;background:#0d1122;color:var(--text);border:1px solid #1c2134;border-radius:12px;padding:12px}
+    button{background:var(--brand);color:#000;border:0;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
+    .stats{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{flex:1;min-width:200px;background:#0d1122;border:1px solid #1c2134;border-radius:12px;padding:14px}
+    .stat .v{font-size:22px;font-weight:900}
+    .orders{display:grid;gap:12px}
+    .order{background:#0d1122;border:1px solid #1c2134;border-radius:12px;padding:14px}
+    .order .top{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;margin-bottom:8px}
+    .badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .b-pending{background:rgba(255,255,255,.07);border:1px solid #2a2f46}
+    .b-confirmed{background:#0fbf62;color:#001d0a}
+    .items{color:var(--muted);font-size:14px}
+    footer{color:var(--muted);text-align:center;padding:30px 18px;border-top:1px solid #151829;margin-top:24px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="logo">Benji<b>Shop</b></div>
+      <a class="back" href="/">← Boutique</a>
+    </div>
+  </header>
+  <main>
+    <h1>Mes commandes</h1>
+    <p class="lead">Entre ton identifiant client pour voir tes commandes (e-mail de paiement ou identifiant Discord si tu l’as indiqué au paiement).</p>
+
+    <div class="panel">
+      <form id="finder">
+        <input id="uid" type="text" placeholder="Ton e-mail ou identifiant Discord (ex: @tonpseudo#1234)" />
+        <button type="submit">Afficher</button>
+      </form>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div>Total de commandes</div><div class="v" id="s-count">—</div></div>
+      <div class="stat"><div>Total dépensé</div><div class="v" id="s-sum">—</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="orders" id="orders"></div>
+    </div>
+  </main>
+  <footer>© <span id="y"></span> BenjiShop</footer>
+  <script>document.getElementById('y').textContent=new Date().getFullYear()</script>
+
+  <script>
+    async function fetchOrders(user){
+      const url = `/.netlify/functions/orders?user=${encodeURIComponent(user)}`;
+      const r = await fetch(url);
+      if(!r.ok) throw new Error("Erreur serveur");
+      return r.json();
+    }
+    function euro(n){ return (Number(n)||0).toFixed(2).replace('.',',')+"€" }
+
+    function render(data){
+      const {items=[], totalCount=0, totalSpent=0} = data||{};
+      document.getElementById('s-count').textContent = totalCount;
+      document.getElementById('s-sum').textContent = euro(totalSpent);
+      const box = document.getElementById('orders');
+      if(!items.length){ box.innerHTML = "<div style='color:#9aa0b4'>Aucune commande pour cet identifiant.</div>"; return; }
+      box.innerHTML = items.map(o => `
+        <div class="order">
+          <div class="top">
+            <div><b>Commande #${o.id}</b> · ${new Date(o.createdAt||o.updatedAt||Date.now()).toLocaleString()}</div>
+            <div class="badge ${o.status==='confirmed'?'b-confirmed':'b-pending'}">${o.status==='confirmed'?'Confirmée':'En cours'}</div>
+          </div>
+          <div class="items">
+            ${o.items.map(it => `${it.title} — <b>${euro(it.price_eur)}</b>`).join("<br/>")}
+          </div>
+          <div style="margin-top:8px">Total: <b>${euro(o.total_eur)}</b></div>
+        </div>
+      `).join("");
+    }
+
+    const f = document.getElementById('finder');
+    f.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const uid = document.getElementById('uid').value.trim();
+      if(!uid) return;
+      try{
+        const data = await fetchOrders(uid);
+        render(data);
+        history.replaceState({}, "", "/orders?u="+encodeURIComponent(uid));
+      }catch(err){ alert("Impossible de récupérer tes commandes."); }
+    });
+
+    // auto-chargement si ?u=
+    const u = new URL(location.href).searchParams.get("u");
+    if(u){ document.getElementById('uid').value = u; f.dispatchEvent(new Event('submit')); }
+  </script>
+</body>
+</html>

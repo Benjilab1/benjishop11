@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin — Commandes</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{--bg:#0b0c14;--panel:#0d1122;--text:#f6f7fb;--muted:#9aa0b4;--brand:#ffd000;--ok:#0fbf62;--warn:#ffd000}
+    *{box-sizing:border-box;margin:0;padding:0} body{background:#0a0b12;color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+    header{position:sticky;top:0;background:#0b0c14;border-bottom:1px solid #171a2a}
+    .nav{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .logo{font-weight:900} .logo b{color:var(--brand)}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px 18px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));border:1px solid #1c2134;border-radius:14px;padding:14px;margin-bottom:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input[type="password"]{flex:1;min-width:220px;background:var(--panel);border:1px solid #1c2134;border-radius:10px;padding:10px;color:var(--text)}
+    button{background:var(--brand);color:#000;border:0;border-radius:10px;padding:10px 12px;font-weight:900;cursor:pointer}
+    .orders{display:grid;gap:12px}
+    .order{background:var(--panel);border:1px solid #1c2134;border-radius:12px;padding:12px}
+    .top{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:13px}
+    .badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+    .b-pending{background:rgba(255,255,255,.07);border:1px solid #2a2f46}
+    .b-confirmed{background:var(--ok);color:#001d0a}
+    .actions{display:flex;gap:8px}
+    .confirm{background:var(--ok);color:#001d0a}
+    .pending{background:#2a2f46;color:#fff}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="logo">Benji<b>Shop</b> — Admin commandes</div>
+      <a style="color:#fff" href="/">← Retour boutique</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="panel">
+      <div class="row">
+        <input id="pw" type="password" placeholder="Mot de passe admin" />
+        <button id="save">Se connecter</button>
+        <button id="logout" style="background:#2a2f46;color:#fff">Se déconnecter</button>
+      </div>
+      <div class="muted" style="margin-top:6px">Astuce : le mot de passe est le même que `ADMIN_PASSWORD` (variable Netlify).</div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="align-items:center">
+        <div id="stats" class="muted">Chargement…</div>
+        <button id="refresh">Rafraîchir</button>
+      </div>
+    </div>
+
+    <div class="orders" id="orders"></div>
+  </div>
+
+  <script>
+    const API = "/.netlify/functions/orders";
+    const store = {
+      get token(){ return localStorage.getItem('admin_secret') || '' },
+      set token(v){ localStorage.setItem('admin_secret', v || '') }
+    };
+
+    function euro(n){ return (Number(n)||0).toFixed(2).replace('.',',')+"€" }
+
+    async function fetchAll(){
+      const r = await fetch(API, { headers: { 'X-Admin-Secret': store.token } });
+      if(!r.ok) throw new Error("unauthorized");
+      return r.json();
+    }
+    async function setStatus(id, status){
+      const r = await fetch(API + "?id=" + encodeURIComponent(id), {
+        method: "PATCH",
+        headers: { 'Content-Type':'application/json', 'X-Admin-Secret': store.token },
+        body: JSON.stringify({ status })
+      });
+      if(!r.ok) throw new Error("patch fail");
+      return r.json();
+    }
+
+    function renderList(data){
+      const box = document.getElementById('orders');
+      const { items=[], totalCount=0, totalSpent=0 } = data||{};
+      document.getElementById('stats').textContent = `Commandes: ${totalCount} — Total encaissé: ${euro(totalSpent)}`;
+      if(!items.length){ box.innerHTML = "<div class='muted'>Aucune commande.</div>"; return; }
+      box.innerHTML = items.map(o=>`
+        <div class="order">
+          <div class="top">
+            <div><b>#${o.id}</b> — ${o.userId || "?"}</div>
+            <div class="badge ${o.status==='confirmed'?'b-confirmed':'b-pending'}">${o.status==='confirmed'?'Confirmée':'En cours'}</div>
+          </div>
+          <div class="muted">${new Date(o.createdAt||o.updatedAt||Date.now()).toLocaleString()}</div>
+          <div style="margin-top:8px">
+            ${o.items.map(it => `${it.title} — <b>${euro(it.price_eur)}</b>`).join("<br/>")}
+          </div>
+          <div style="margin-top:8px">Total: <b>${euro(o.total_eur)}</b></div>
+          <div class="actions" style="margin-top:10px">
+            <button class="confirm" data-id="${o.id}">Marquer confirmée</button>
+            <button class="pending" data-id="${o.id}">Remettre en cours</button>
+          </div>
+        </div>
+      `).join("");
+
+      box.querySelectorAll(".confirm").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          try{ await setStatus(btn.dataset.id, "confirmed"); await load(); }catch(e){ alert("Échec de mise à jour"); }
+        });
+      });
+      box.querySelectorAll(".pending").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          try{ await setStatus(btn.dataset.id, "pending"); await load(); }catch(e){ alert("Échec de mise à jour"); }
+        });
+      });
+    }
+
+    async function load(){
+      try{
+        const data = await fetchAll();
+        renderList(data);
+      }catch(e){
+        document.getElementById('orders').innerHTML = "<div class='muted'>Accès refusé. Entre le mot de passe admin.</div>";
+      }
+    }
+
+    document.getElementById('save').addEventListener('click', ()=>{
+      const v = document.getElementById('pw').value.trim();
+      if(!v) return;
+      store.token = v;
+      load();
+    });
+    document.getElementById('logout').addEventListener('click', ()=>{
+      store.token = '';
+      document.getElementById('orders').innerHTML = "<div class='muted'>Déconnecté.</div>";
+      document.getElementById('stats').textContent = "—";
+    });
+    document.getElementById('refresh').addEventListener('click', load);
+
+    // auto-login si déjà stocké
+    if(store.token){ load(); } else { document.getElementById('orders').innerHTML = "<div class='muted'>Entre le mot de passe et clique « Se connecter ».</div>"; }
+  </script>
+</body>
+</html>
