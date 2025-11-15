@@ -2,10 +2,9 @@
 // Script front pour la boutique (catégories + produits)
 
 // --------------- LISTE DES PERSONNAGES / CATÉGORIES ---------------
-// Tu peux rajouter / modifier les noms ici.
-// Ils doivent être EXACTEMENT identiques aux noms que tu utilises :
-//  - dans les fichiers images (slugué ensuite)
-//  - dans le select "Personnage / Catégorie d’accueil" du panel admin
+// UNIQUEMENT les persos qui existent en image dans "Photo brainrot site"
+// Chaque nom est écrit pour que le slug généré corresponde au fichier .webp
+// Exemple : "Burguro and Fryuro" -> burguro-and-fryuro.webp
 const BRAINROT_NAMES = [
   "Burguro and Fryuro",
   "Capitano Moby",
@@ -17,23 +16,39 @@ const BRAINROT_NAMES = [
   "Eviledon",
   "Fragrama and Chocrama",
   "Garama and Madundung",
+  "Headless Horseman",
+  "Ketchuru and Musturu",
+  "Ketupat Kepat",
+  "La Casa Boo",
+  "La Extinct Grande",
   "La Grande Combinasion",
-  "Los 67",
-  "Los Primos",
+  "La Secret Combinasion",
   "La Spooky Grande",
-  "Perrito Burrito",
-  "Mieteteira Bicicleteira",
-  "Quesadilla Crocodila",
-  "Nucléaro Dinossauro",
+  "Las Sis",
+  "La Supreme Combinasion",
+  "La Taco Combinasion",
+  "Los 67",
   "Los Bros",
-  "La Extinct Grande"
+  "Los Primos",
+  "Los Puggies",
+  "Los Spaghettis",
+  "Los Tacoritas",
+  "Meowl",
+  "Money Money Puggy",
+  "Noo My Examine",
+  "Nuclearo Dinossauro",
+  "Spaghetti Tualetti",
+  "Spooky and Pumpky",
+  "Strawberry Elephant",
+  "Tacorita Bicicleta",
+  "Tang Tang Keletang",
+  "Tictac Sahur",
+  "Tralaledon"
 ].sort((a, b) => a.localeCompare(b));
 
-// catégories à masquer complètement sur la home (si tu veux cacher des persos)
-const HIDDEN_CATEGORIES = [
-  "Quesadilla Crocodila",
-  "Mieteteira Bicicleteira"
-];
+// catégories à masquer complètement sur la home (si tu veux en cacher certaines)
+// Pour l'instant on ne cache rien, donc tableau vide
+const HIDDEN_CATEGORIES = [];
 
 // --------------- CONFIG IMAGES -----------------
 const RAW_DIR = "Photo brainrot site";
