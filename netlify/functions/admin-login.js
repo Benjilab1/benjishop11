@@ -1,46 +1,52 @@
 // netlify/functions/admin-login.js
+// Vérifie un mot de passe en dur et renvoie ok / erreur.
+// Aucune variable d'environnement nécessaire.
 
 exports.handler = async (event) => {
+  // On n'accepte que POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: JSON.stringify({ ok: false, error: "Méthode non autorisée" }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" })
     };
   }
 
+  // Mot de passe admin (tu peux le changer)
+  const ADMIN_PASSWORD = "Noa051221"; // <-- c'est CE mot de passe qu'il faudra mettre sur /admin
+
+  let body = {};
   try {
-    const body = JSON.parse(event.body || "{}");
-    const password = (body.password || "").trim();
+    body = JSON.parse(event.body || "{}");
+  } catch (e) {
+    body = {};
+  }
 
-    const expected = process.env.ADMIN_PASSWORD;
+  const input = (body.password || "").trim();
 
-    if (!expected) {
-      console.error("[admin-login] ADMIN_PASSWORD manquant dans les variables Netlify.");
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          ok: false,
-          error: "Configuration serveur manquante (ADMIN_PASSWORD).",
-        }),
-      };
-    }
-
-    if (password === expected) {
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ ok: true }),
-      };
-    }
-
+  if (input !== ADMIN_PASSWORD) {
+    // mauvais mot de passe
     return {
       statusCode: 401,
-      body: JSON.stringify({ ok: false, error: "Mot de passe incorrect." }),
-    };
-  } catch (err) {
-    console.error("[admin-login] Erreur", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ ok: false, error: "Erreur serveur." }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        success: false,
+        error: "INVALID_PASSWORD"
+      })
     };
   }
+
+  // token bidon au cas où le front en veut un
+  const token = "benjishop-admin";
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ok: true,
+      success: true,
+      token
+    })
+  };
 };
