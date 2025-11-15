@@ -1,158 +1,154 @@
 // netlify/functions/admin-products.js
-// CRUD admin pour les BrainRot (Netlify Blobs + Busboy)
+// Reçoit un formulaire multipart (name, category, price, image)
+// et stocke le BrainRot dans Netlify Blobs.
 
 const Busboy = require("busboy");
 const { getStore } = require("@netlify/blobs");
 
-const JSON_HEADERS = {
-  "Content-Type": "application/json",
-  "Cache-Control": "no-store"
-};
-
-async function loadItems(store) {
-  return (await store.get("items.json", { type: "json" })) || [];
-}
-
-async function saveItems(store, items) {
-  await store.set("items.json", items, { type: "json" });
-}
-
 exports.handler = async (event) => {
-  const store = getStore("benjishop-products");
-  const url = new URL(event.rawUrl);
-  const action = url.searchParams.get("action") || "create";
-
-  // ---- LISTE POUR L'ADMIN ----
-  if (event.httpMethod === "GET") {
-    try {
-      const items = await loadItems(store);
-      return {
-        statusCode: 200,
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ items })
-      };
-    } catch (err) {
-      console.error("GET admin-products error", err);
-      return {
-        statusCode: 500,
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ error: "Erreur serveur (admin GET)" })
-      };
-    }
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }),
+    };
   }
 
-  // ---- SUPPRESSION ----
-  if (event.httpMethod === "POST" && action === "delete") {
-    const id = url.searchParams.get("id");
-    if (!id) {
-      return {
+  return await new Promise((resolve, reject) => {
+    const headers = event.headers || {};
+    const contentType = headers["content-type"] || headers["Content-Type"];
+
+    if (!contentType || !contentType.startsWith("multipart/form-data")) {
+      resolve({
         statusCode: 400,
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ error: "id manquant" })
-      };
-    }
-
-    try {
-      let items = await loadItems(store);
-      const before = items.length;
-      items = items.filter((p) => p.id !== id);
-      await saveItems(store, items);
-
-      return {
-        statusCode: 200,
-        headers: JSON_HEADERS,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          success: true,
-          removed: before - items.length
-        })
-      };
-    } catch (err) {
-      console.error("DELETE admin-products error", err);
-      return {
-        statusCode: 500,
-        headers: JSON_HEADERS,
-        body: JSON.stringify({ error: "Erreur serveur (admin delete)" })
-      };
+          ok: false,
+          error: "INVALID_CONTENT_TYPE",
+          message: "Content-Type multipart/form-data requis.",
+        }),
+      });
+      return;
     }
-  }
 
-  // ---- CREATION (FORM-DATA + BUSBOY) ----
-  if (event.httpMethod === "POST" && action === "create") {
-    return new Promise((resolve) => {
-      const busboy = Busboy({
-        headers: event.headers
-      });
+    const busboy = Busboy({ headers });
 
-      const fields = {
-        name: "",
-        category: "",
-        price: ""
-      };
+    const fields = {};
+    let fileData = null;
 
-      busboy.on("field", (name, value) => {
-        if (typeof value === "string" && value.length <= 500) {
-          fields[name] = value.trim();
-        }
-      });
-
-      // on ignore l'image, on vide juste le flux pour ne pas planter
-      busboy.on("file", (_name, file, _info) => {
-        file.resume();
-      });
-
-      busboy.on("finish", async () => {
-        const { name, category, price } = fields;
-
-        if (!name || !category || !price) {
-          return resolve({
-            statusCode: 400,
-            headers: JSON_HEADERS,
-            body: JSON.stringify({
-              error: "Champs manquants (name, category, price)"
-            })
-          });
-        }
-
-        try {
-          const items = await loadItems(store);
-
-          const newItem = {
-            id: Date.now().toString(),
-            title: name,
-            category,
-            price_eur: Number(price),
-            image: null // pour l'instant, on affiche l'image du perso côté front
-          };
-
-          items.push(newItem);
-          await saveItems(store, items);
-
-          return resolve({
-            statusCode: 200,
-            headers: JSON_HEADERS,
-            body: JSON.stringify({ success: true, item: newItem })
-          });
-        } catch (err) {
-          console.error("CREATE admin-products error", err);
-          return resolve({
-            statusCode: 500,
-            headers: JSON_HEADERS,
-            body: JSON.stringify({ error: "Erreur serveur (admin create)" })
-          });
-        }
-      });
-
-      const body = event.isBase64Encoded
-        ? Buffer.from(event.body, "base64")
-        : Buffer.from(event.body || "", "utf8");
-
-      busboy.end(body);
+    busboy.on("field", (name, value) => {
+      fields[name] = value;
     });
-  }
 
-  return {
-    statusCode: 405,
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ error: "Méthode ou action non supportée" })
-  };
+    busboy.on("file", (fieldName, file, info) => {
+      const { filename, mimeType } = info;
+      const chunks = [];
+
+      file.on("data", (data) => {
+        chunks.push(data);
+      });
+
+      file.on("end", () => {
+        fileData = {
+          filename,
+          mimeType,
+          buffer: Buffer.concat(chunks),
+        };
+      });
+    });
+
+    busboy.on("error", (err) => {
+      console.error("Busboy error:", err);
+      reject(err);
+    });
+
+    busboy.on("finish", async () => {
+      try {
+        const name = (fields.name || "").trim();
+        const category = (fields.category || "").trim();
+        const price = (fields.price || "").trim();
+
+        if (!name || !category || !price || !fileData) {
+          console.warn("Champs manquants:", { name, category, price, hasFile: !!fileData });
+          resolve({
+            statusCode: 400,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ok: false,
+              error: "MISSING_FIELDS",
+              message: "Champs manquants (name, category, price, image).",
+            }),
+          });
+          return;
+        }
+
+        const priceValue = parseFloat(price.replace(",", "."));
+        if (Number.isNaN(priceValue)) {
+          resolve({
+            statusCode: 400,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ok: false,
+              error: "INVALID_PRICE",
+              message: "Prix invalide.",
+            }),
+          });
+          return;
+        }
+
+        // Encodage de l'image en data URL (base64)
+        const base64 = fileData.buffer.toString("base64");
+        const dataUrl = `data:${fileData.mimeType};base64,${base64}`;
+
+        const store = getStore("brainrot-products");
+
+        const id =
+          Date.now().toString(36) +
+          "-" +
+          Math.random().toString(36).slice(2, 8);
+
+        const item = {
+          id,
+          title: name,
+          category,
+          price_eur: priceValue,
+          image: dataUrl,
+          createdAt: new Date().toISOString(),
+        };
+
+        await store.set(id, JSON.stringify(item), {
+          metadata: {
+            category,
+            title: name,
+          },
+        });
+
+        console.log("BrainRot enregistré:", item);
+
+        resolve({
+          statusCode: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ok: true,
+            success: true,
+            item,
+          }),
+        });
+      } catch (err) {
+        console.error("Erreur admin-products:", err);
+        resolve({
+          statusCode: 500,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ok: false,
+            error: "SERVER_ERROR",
+          }),
+        });
+      }
+    });
+
+    const encoding = event.isBase64Encoded ? "base64" : "binary";
+    const body = event.body ? Buffer.from(event.body, encoding) : Buffer.alloc(0);
+    busboy.end(body);
+  });
 };
