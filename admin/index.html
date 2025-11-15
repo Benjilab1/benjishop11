@@ -3,423 +3,491 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BenjiShop — Admin</title>
+  <title>BenjiShop — Panel BrainRot</title>
 
   <style>
     :root{
       --bg:#02030a;
-      --card-bg:#050714;
-      --brand:#00f5ff;
-      --brand-soft:#00f5ff33;
+      --card:#050714;
+      --accent:#00f5ff;
+      --accent-soft:#00f5ff33;
       --text:#f6f7fb;
       --muted:#a3a7c0;
-      --radius:14px;
-      --shadow:0 12px 40px rgba(0,0,0,.8);
-      --danger:#ff3366;
-      --success:#3be577;
+      --error:#ff4d6a;
+      --radius:16px;
+      --shadow:0 12px 35px rgba(0,0,0,.7);
     }
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{
-      height:100%;
-      font-family:"Inter","Segoe UI",system-ui,sans-serif;
-      background:var(--bg);
+    *{box-sizing:border-box;margin:0;padding:0;font-family:"Inter","Segoe UI",system-ui,sans-serif;}
+
+    body{
+      min-height:100vh;
+      background:radial-gradient(circle at 0% 0%, rgba(0,245,255,0.25) 0, transparent 55%),
+                 radial-gradient(circle at 100% 100%, rgba(0,245,255,0.18) 0, transparent 55%),
+                 #02030a;
       color:var(--text);
     }
 
-    body{
+    header{
+      padding:16px 24px 10px;
       display:flex;
+      justify-content:space-between;
       align-items:center;
-      justify-content:center;
-      padding:20px;
+      border-bottom:1px solid rgba(255,255,255,0.05);
+      backdrop-filter:blur(14px);
+      background:linear-gradient(180deg, rgba(2,3,14,0.96), rgba(2,3,14,0.8));
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .logo{
+      font-weight:800;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-size:18px;
+      color:var(--muted);
+    }
+    .logo b{
+      color:var(--accent);
+      text-shadow:0 0 14px var(--accent-soft);
+    }
+    .logout{
+      font-size:12px;
+      color:var(--muted);
+      text-decoration:none;
+      opacity:.7;
+    }
+    .logout:hover{opacity:1;}
+
+    .wrapper{
+      max-width:1100px;
+      margin:18px auto 40px;
+      padding:0 16px 24px;
     }
 
-    .bg-root{
-      position:fixed;
-      inset:0;
-      z-index:-3;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(0,245,255,0.18) 0, transparent 55%),
-        radial-gradient(circle at 90% 100%, rgba(0,245,255,0.16) 0, transparent 55%),
-        #02030a;
-    }
-
-    .card{
-      width:100%;
-      max-width:800px;
-      background:linear-gradient(145deg, rgba(9,11,30,0.98), rgba(6,8,22,0.98));
+    .panel{
+      background:linear-gradient(145deg, rgba(8,10,24,0.98), rgba(5,7,19,0.98));
       border-radius:var(--radius);
-      border:1px solid rgba(0,245,255,0.25);
-      box-shadow:var(--shadow), 0 0 30px rgba(0,245,255,0.25);
+      border:1px solid rgba(0,245,255,0.18);
+      box-shadow:var(--shadow);
       padding:22px 20px 20px;
       position:relative;
       overflow:hidden;
     }
 
-    .logo{
-      font-weight:800;
-      font-size:20px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin-bottom:10px;
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:radial-gradient(circle at 0 0, rgba(0,245,255,0.15), transparent 55%);
+      opacity:.7;
+      pointer-events:none;
     }
-    .logo b{
-      color:var(--brand);
-      text-shadow:0 0 16px var(--brand-soft);
-    }
+    .panel-inner{position:relative;z-index:1;}
 
     h1{
-      font-size:18px;
-      margin-bottom:2px;
+      font-size:22px;
+      margin-bottom:6px;
     }
-    .subtitle{
+    h1 span{
+      color:var(--accent);
+      text-shadow:0 0 12px var(--accent-soft);
+    }
+    .sub{
       font-size:13px;
       color:var(--muted);
-      margin-bottom:12px;
+      margin-bottom:18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap:18px;
+    }
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr;}
+    }
+
+    .card{
+      background:rgba(2,3,14,0.85);
+      border-radius:14px;
+      padding:14px 14px 16px;
+      border:1px solid rgba(255,255,255,0.08);
     }
 
     label{
       display:block;
-      font-size:13px;
+      font-size:12px;
       margin-bottom:4px;
+      color:var(--muted);
     }
-
-    input, select{
-      width:100%;
-      padding:9px 10px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(2,4,15,0.9);
-      color:var(--text);
-      font-size:14px;
-      outline:none;
-      transition:border-color .18s, box-shadow .18s, background .18s;
-    }
-
-    input:focus, select:focus{
-      border-color:var(--brand);
-      box-shadow:0 0 0 1px rgba(0,245,255,0.4);
-      background:rgba(3,6,20,0.9);
-    }
-
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      border-radius:999px;
-      border:none;
-      padding:9px 16px;
-      font-size:14px;
-      cursor:pointer;
-      font-weight:600;
-      margin-top:10px;
-      background:linear-gradient(90deg, #00f5ff, #00b7ff);
-      color:#02030a;
-      box-shadow:0 0 20px rgba(0,245,255,0.6);
-      transition:transform .15s, box-shadow .15s, filter .15s;
-    }
-    .btn:hover{
-      transform:translateY(-1px);
-      filter:brightness(1.05);
-      box-shadow:0 0 24px rgba(0,245,255,0.8);
-    }
-    .btn:disabled{
-      opacity:0.55;
-      cursor:default;
-      box-shadow:none;
-      transform:none;
-    }
-
     .field{
       margin-bottom:10px;
     }
 
-    .row{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
+    input, select{
+      width:100%;
+      background:#050814;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.16);
+      padding:7px 10px;
+      color:var(--text);
+      font-size:13px;
+      outline:none;
     }
-    .row > .field{
-      flex:1;
-      min-width:0;
+    input:focus, select:focus{
+      border-color:var(--accent);
+      box-shadow:0 0 0 1px rgba(0,245,255,0.4);
     }
 
+    input[type="file"]{
+      padding:5px 10px;
+      background:#050814;
+      border-radius:10px;
+      cursor:pointer;
+    }
+
+    .file-preview{
+      margin-top:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .file-preview img{
+      width:60px;
+      height:60px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.16);
+    }
+
+    .btn-primary{
+      border:0;
+      border-radius:999px;
+      background:radial-gradient(circle at 30% 0, #00f5ff, #009bff);
+      color:#02030a;
+      padding:9px 20px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 0 18px rgba(0,245,255,0.7);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      margin-top:4px;
+    }
+    .btn-primary:disabled{
+      opacity:.5;
+      cursor:wait;
+      box-shadow:none;
+    }
+
+    .status{
+      margin-top:8px;
+      font-size:12px;
+      min-height:16px;
+    }
+    .status.ok{color:#43ffb1;}
+    .status.err{color:var(--error);}
+
+    .list{
+      max-height:420px;
+      overflow:auto;
+      margin-top:6px;
+      padding-right:4px;
+    }
+    .item{
+      border-radius:11px;
+      border:1px solid rgba(255,255,255,0.12);
+      padding:7px 9px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:7px;
+      background:#050814;
+      font-size:12px;
+    }
+    .item img{
+      width:42px;
+      height:42px;
+      object-fit:cover;
+      border-radius:8px;
+      flex-shrink:0;
+    }
+    .item-main{
+      flex:1;
+    }
+    .item-title{
+      font-weight:600;
+      font-size:12px;
+    }
+    .item-meta{
+      color:var(--muted);
+      font-size:11px;
+    }
+    .item-price{
+      font-weight:700;
+      color:var(--accent);
+      font-size:12px;
+    }
+    .pill{
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.18);
+      padding:2px 7px;
+      font-size:10px;
+      margin-left:4px;
+      color:var(--muted);
+    }
     .small{
       font-size:11px;
       color:var(--muted);
-      margin-top:4px;
-    }
-
-    .error{
       margin-top:6px;
-      font-size:12px;
-      color:var(--danger);
-    }
-    .success{
-      margin-top:6px;
-      font-size:12px;
-      color:var(--success);
-    }
-
-    .divider{
-      margin:16px 0 12px;
-      border-top:1px solid rgba(255,255,255,0.12);
-    }
-
-    .logout{
-      position:absolute;
-      top:12px;
-      right:16px;
-      font-size:11px;
-      color:var(--muted);
-      cursor:pointer;
-      text-decoration:underline;
-      display:none;
-    }
-    .logout:hover{
-      color:#fff;
-    }
-
-    #panel{ display:none; }
-
-    /* Liste admin */
-    .admin-list{
-      margin-top:8px;
-      max-height:260px;
-      overflow:auto;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.1);
-      background:rgba(2,4,15,0.8);
-    }
-    .admin-item{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:8px 10px;
-      font-size:13px;
-      border-bottom:1px solid rgba(255,255,255,0.06);
-    }
-    .admin-item:last-child{
-      border-bottom:none;
-    }
-    .admin-main{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .admin-title{
-      font-weight:600;
-    }
-    .admin-meta{
-      font-size:11px;
-      color:var(--muted);
-    }
-    .admin-actions{
-      display:flex;
-      gap:6px;
-    }
-    .btn-sm{
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.2);
-      background:transparent;
-      color:var(--text);
-      font-size:11px;
-      padding:4px 8px;
-      cursor:pointer;
-    }
-    .btn-sm:hover{
-      background:rgba(255,255,255,0.10);
-    }
-    .btn-danger{
-      border-color:rgba(255,51,102,0.8);
-      color:#ff99b5;
-    }
-    .btn-danger:hover{
-      background:rgba(255,51,102,0.18);
     }
   </style>
 </head>
 <body>
-  <div class="bg-root"></div>
+  <header>
+    <div class="logo">BENJI<b>SHOP</b></div>
+    <a href="/" class="logout">Retour au site</a>
+  </header>
 
-  <div class="card">
-    <div class="logout" id="logoutBtn">Déconnexion</div>
+  <main class="wrapper">
+    <section class="panel">
+      <div class="panel-inner">
+        <h1><span>Panel</span> de vente BrainRot</h1>
+        <p class="sub">Ajoute un nouveau perso, choisis dans quelle <b>catégorie (personnage)</b> de la page d'accueil il apparaît, fixe le prix en € et ajoute son image.</p>
 
-    <!-- LOGIN -->
-    <section id="login">
-      <div class="logo">Benji<b>Shop</b></div>
-      <h1>Accès admin</h1>
-      <p class="subtitle">Entre le mot de passe secret pour ouvrir le panel de vente.</p>
+        <div class="grid">
+          <!-- FORMULAIRE -->
+          <div class="card">
+            <div class="field">
+              <label for="name">Nom du BrainRot (variation / skin)</label>
+              <input id="name" type="text" placeholder="Ex : Ketchup drip, Skin or, etc.">
+            </div>
 
-      <form id="loginForm">
-        <div class="field">
-          <label for="password">Mot de passe admin</label>
-          <input type="password" id="password" autocomplete="current-password" required />
-        </div>
-        <button class="btn" type="submit" id="loginBtn">
-          <span>Connexion</span>
-        </button>
-        <div class="error" id="loginError" style="display:none;"></div>
-      </form>
-    </section>
+            <div class="field">
+              <label for="category">Personnage / Catégorie d'accueil</label>
+              <select id="category"></select>
+              <p class="small">Mets exactement le même nom que sur la page d’accueil pour que ça tombe dans la bonne catégorie.</p>
+            </div>
 
-    <!-- PANEL -->
-    <section id="panel">
-      <div class="logo">Benji<b>Shop</b></div>
-      <h1>Panel de vente BrainRot</h1>
-      <p class="subtitle">
-        Ajoute un nouveau BrainRot, choisis sa catégorie (perso), fixe le prix en €.
-      </p>
+            <div class="field">
+              <label for="price">Prix (€)</label>
+              <input id="price" type="number" min="0" step="0.01" placeholder="Ex : 15">
+            </div>
 
-      <form id="productForm">
-        <div class="field">
-          <label for="name">Nom du BrainRot (variation / skin)</label>
-          <input type="text" id="name" required placeholder="Ex: La Grande Combinasion — Rainbow" />
-        </div>
+            <div class="field">
+              <label for="image">Image (depuis ton PC)</label>
+              <input id="image" type="file" accept="image/*">
+              <div class="file-preview" id="filePreview" style="display:none;">
+                <img id="previewImg" alt="">
+                <span id="previewName"></span>
+              </div>
+            </div>
 
-        <div class="row">
-          <div class="field">
-            <label for="category">Personnage / Catégorie d’accueil</label>
-            <select id="category" required>
-              <option value="">Choisis le perso…</option>
-              <!-- adapte si besoin -->
-              <option value="La Grande Combinasion">La Grande Combinasion</option>
-              <option value="Eviledon">Eviledon</option>
-              <option value="Mieteteira Bicicleteira">Mieteteira Bicicleteira</option>
-              <option value="Los Primos">Los Primos</option>
-              <option value="La Spooky Grande">La Spooky Grande</option>
-              <option value="Los 67">Los 67</option>
-              <option value="Chipso and Queso">Chipso and Queso</option>
-              <option value="Celularcini Viciosini">Celularcini Viciosini</option>
-              <option value="Perrito Burrito">Perrito Burrito</option>
-              <option value="Esok Sekolah">Esok Sekolah</option>
-              <option value="Garama and Madundung">Garama and Madundung</option>
-              <option value="Chillin Chilli">Chillin Chilli</option>
-              <option value="Autre">Autre / Nouveau perso</option>
-            </select>
+            <button class="btn-primary" id="saveBtn">
+              Enregistrer le BrainRot
+            </button>
+            <div class="status" id="status"></div>
+            <p class="small">
+              Si tu veux aller plus vite, tu peux aussi utiliser ce panel sur ton PC, choisir les images déjà dans ton dossier BrainRot, et enchaîner les ajouts très rapidement.
+            </p>
           </div>
-          <div class="field">
-            <label for="price">Prix (€)</label>
-            <input type="number" id="price" required min="0" step="0.01" placeholder="Ex: 12" />
+
+          <!-- LISTE DES BRAINROT -->
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <div style="font-weight:600;font-size:13px;">BrainRot actuellement en vente</div>
+              <div id="count" class="pill">0 items</div>
+            </div>
+            <div id="list" class="list"></div>
           </div>
         </div>
-
-        <div class="field">
-          <label for="image">Image (depuis ton PC)</label>
-          <input type="file" id="image" accept="image/*" />
-          <p class="small">
-            Pour l’instant, le site utilise l’image du personnage sur la page d’accueil.
-            Ce champ est là pour plus tard (variations spécifiques).
-          </p>
-        </div>
-
-        <button class="btn" type="submit" id="saveBtn">
-          <span>Enregistrer le BrainRot</span>
-        </button>
-        <div class="success" id="saveSuccess" style="display:none;"></div>
-        <div class="error" id="saveError" style="display:none;"></div>
-      </form>
-
-      <div class="divider"></div>
-      <h2 style="font-size:15px;margin-bottom:6px;">BrainRot actuellement en vente</h2>
-      <p class="small">Tu peux voir tout ce qui est en base, et supprimer ce que tu veux.</p>
-
-      <div class="admin-list" id="itemsList">
-        <div class="small" style="padding:8px 10px;">Chargement…</div>
       </div>
     </section>
-  </div>
+  </main>
 
   <script>
-    const $ = (id) => document.getElementById(id);
+    // mêmes personnages que dans products.js
+    const BRAINROT_NAMES = [
+      "Burguro and Fryuro",
+      "Capitano Moby",
+      "Celularcini Viciosini",
+      "Chillin Chili",
+      "Chipso and Queso",
+      "Dragon Cannelloni",
+      "Esok Sekolah",
+      "Eviledon",
+      "Fragrama and Chocrama",
+      "Garama and Madundung",
+      "Headless Horseman",
+      "Ketchuru and Musturu",
+      "Ketupat Kepat",
+      "La Casa Boo",
+      "La Extinct Grande",
+      "La Grande Combinasion",
+      "La Secret Combinasion",
+      "La Spooky Grande",
+      "Las Sis",
+      "La Supreme Combinasion",
+      "La Taco Combinasion",
+      "Los 67",
+      "Los Bros",
+      "Los Primos",
+      "Los Puggies",
+      "Los Spaghettis",
+      "Los Tacoritas",
+      "Meowl",
+      "Money Money Puggy",
+      "Noo My Examine",
+      "Nuclearo Dinossauro",
+      "Spaghetti Tualetti",
+      "Spooky and Pumpky",
+      "Strawberry Elephant",
+      "Tacorita Bicicleta",
+      "Tang Tang Keletang",
+      "Tictac Sahur",
+      "Tralaledon"
+    ].sort((a,b)=>a.localeCompare(b));
 
-    const loginSection = $("login");
-    const panelSection = $("panel");
-    const loginForm = $("loginForm");
-    const loginBtn = $("loginBtn");
-    const loginError = $("loginError");
-    const logoutBtn = $("logoutBtn");
+    const RAW_DIR = "Photo brainrot site";
+    const BASE = `../${encodeURIComponent(RAW_DIR)}/`;
 
-    const productForm = $("productForm");
-    const saveBtn = $("saveBtn");
-    const saveSuccess = $("saveSuccess");
-    const saveError = $("saveError");
-    const itemsList = $("itemsList");
-
-    function showPanel(){
-      loginSection.style.display = "none";
-      panelSection.style.display = "block";
-      logoutBtn.style.display = "block";
-      sessionStorage.setItem("benji_admin_ok","1");
-      refreshList();
+    function toSlug(name){
+      return name
+        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-zA-Z0-9\\s]/g,"")
+        .trim()
+        .toLowerCase()
+        .replace(/\\s+/g,"-");
+    }
+    function imgUrlFromName(name,ext="webp"){
+      return BASE + toSlug(name) + "." + ext;
     }
 
-    function logout(){
-      sessionStorage.removeItem("benji_admin_ok");
-      location.reload();
+    const categorySelect = document.getElementById("category");
+    const saveBtn        = document.getElementById("saveBtn");
+    const statusEl       = document.getElementById("status");
+    const listEl         = document.getElementById("list");
+    const countEl        = document.getElementById("count");
+    const fileInput      = document.getElementById("image");
+    const filePrev       = document.getElementById("filePreview");
+    const prevImg        = document.getElementById("previewImg");
+    const prevName       = document.getElementById("previewName");
+
+    // Remplir le select avec les persos
+    BRAINROT_NAMES.forEach(n=>{
+      const opt=document.createElement("option");
+      opt.value=n;
+      opt.textContent=n;
+      categorySelect.appendChild(opt);
+    });
+
+    fileInput.addEventListener("change", ()=>{
+      const f=fileInput.files[0];
+      if(!f){filePrev.style.display="none";return;}
+      filePrev.style.display="flex";
+      prevName.textContent=f.name;
+      const url=URL.createObjectURL(f);
+      prevImg.src=url;
+    });
+
+    function setStatus(msg,type){
+      statusEl.textContent=msg||"";
+      statusEl.className="status" + (type?(" "+type):"");
     }
 
-    logoutBtn.addEventListener("click", logout);
+    function itemCard(p){
+      const title=p.title || p.name || "Item";
+      const cat=p.category || "Autre";
+      const price=(Number(p.price_eur||p.price)||0).toFixed(2).replace(".",",")+"€";
 
-    if (sessionStorage.getItem("benji_admin_ok") === "1"){
-      showPanel();
+      let img=p.image;
+      if(!img && cat) img=imgUrlFromName(cat);
+
+      return `
+        <div class="item">
+          <img src="${img||""}" onerror="this.style.display='none'">
+          <div class="item-main">
+            <div class="item-title">${title}</div>
+            <div class="item-meta">${cat}</div>
+          </div>
+          <div class="item-price">${price}</div>
+        </div>
+      `;
     }
 
-    // LOGIN
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      loginError.style.display = "none";
-      loginError.textContent = "";
+    async function refreshList(){
+      try{
+        const res = await fetch("/.netlify/functions/products");
+        if(!res.ok) throw new Error("HTTP "+res.status);
+        const payload = await res.json();
+        const rawItems = Array.isArray(payload.items)?payload.items:payload;
+        const all = rawItems.filter(Boolean);
 
-      const password = $("password").value.trim();
-      if (!password) return;
+        countEl.textContent = all.length + (all.length>1 ? " items" : " item");
+        listEl.innerHTML = all.length
+          ? all.map(itemCard).join("")
+          : "<div class='small'>Aucun BrainRot ajouté pour le moment.</div>";
+      }catch(e){
+        console.error(e);
+        listEl.innerHTML = "<div class='small'>Impossible de charger la liste (fonction Netlify products).</div>";
+      }
+    }
 
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Connexion...";
+    saveBtn.addEventListener("click", async ()=>{
+      const name   = document.getElementById("name").value.trim();
+      const cat    = categorySelect.value;
+      const price  = document.getElementById("price").value.trim();
+      const file   = fileInput.files[0];
+
+      if(!name || !cat || !price || !file){
+        setStatus("Champs manquants (nom, catégorie, prix, image).", "err");
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append("name", name);
+      fd.append("category", cat);
+      fd.append("price", price);
+      fd.append("image", file);
+
+      saveBtn.disabled=true;
+      setStatus("Envoi en cours...", "");
 
       try{
-        const res = await fetch("/.netlify/functions/admin-login", {
+        const res = await fetch("/.netlify/functions/admin-products", {
           method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body:JSON.stringify({ password })
+          body:fd
         });
-
-        if (!res.ok){
-          const data = await res.json().catch(() => ({}));
-          loginError.textContent = data.error || "Mot de passe incorrect.";
-          loginError.style.display = "block";
-        }else{
-          showPanel();
+        if(!res.ok){
+          throw new Error("HTTP "+res.status);
         }
-      }catch(err){
-        console.error(err);
-        loginError.textContent = "Erreur serveur, réessaie.";
-        loginError.style.display = "block";
+        const data = await res.json();
+        console.log("Admin save:", data);
+        setStatus("BrainRot enregistré.", "ok");
+
+        // reset rapide
+        document.getElementById("name").value="";
+        document.getElementById("price").value="";
+        fileInput.value="";
+        filePrev.style.display="none";
+
+        // refresh liste
+        refreshList();
+      }catch(e){
+        console.error(e);
+        setStatus("Erreur serveur. Le backend Netlify attend les champs name, category, price et image.", "err");
       }finally{
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Connexion";
+        saveBtn.disabled=false;
       }
     });
 
-    // LISTE ADMIN
-    async function refreshList(){
-      itemsList.innerHTML = '<div class="small" style="padding:8px 10px;">Chargement…</div>';
-      try{
-        const res = await fetch("/.netlify/functions/admin-products");
-        if (!res.ok) throw new Error("HTTP "+res.status);
-        const data = await res.json();
-        const items = Array.isArray(data.items) ? data.items : [];
-
-        if (!items.length){
-          itemsList.innerHTML = '<div class="small" style="padding:8px 10px;">Aucun BrainRot en base pour le moment.</div>';
-          return;
-        }
-
-        itemsList.innerHTML = items.map(p => `
-          <div class="admin-item" data-id="${p.id}">
-            <div class="admin-main">
-              <div class="admin-title">${p.title || "(sans nom)"}</div>
-              <div class="admin-meta">
-                Perso : ${p.category || "?"} — Prix : ${(Number(p.price_eur)||0).toFixed(2)}€
+    // init
+    refreshList();
+  </script>
+</body>
+</html>
