@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BenjiShop — Panel BrainRot</title>
 
+  <!-- Protection : si pas de token, on renvoie vers /admin/login.html -->
+  <script>
+    if (localStorage.getItem("admin_token") !== "ok") {
+      window.location.href = "/admin/login.html";
+    }
+  </script>
+
   <style>
     :root{
       --bg:#02030a;
@@ -56,6 +63,7 @@
       color:var(--muted);
       text-decoration:none;
       opacity:.7;
+      cursor:pointer;
     }
     .logout:hover{opacity:1;}
 
@@ -217,9 +225,7 @@
       border-radius:8px;
       flex-shrink:0;
     }
-    .item-main{
-      flex:1;
-    }
+    .item-main{ flex:1; }
     .item-title{
       font-weight:600;
       font-size:12px;
@@ -251,14 +257,18 @@
 <body>
   <header>
     <div class="logo">BENJI<b>SHOP</b></div>
-    <a href="/" class="logout">Retour au site</a>
+    <!-- Bouton déconnexion -->
+    <a class="logout" onclick="logout()">Déconnexion</a>
   </header>
 
   <main class="wrapper">
     <section class="panel">
       <div class="panel-inner">
         <h1><span>Panel</span> de vente BrainRot</h1>
-        <p class="sub">Ajoute un nouveau perso, choisis dans quelle <b>catégorie (personnage)</b> de la page d'accueil il apparaît, fixe le prix en € et ajoute son image.</p>
+        <p class="sub">
+          Ajoute un nouveau perso, choisis dans quelle <b>catégorie (personnage)</b> de la page d'accueil il apparaît,
+          fixe le prix en € et ajoute son image.
+        </p>
 
         <div class="grid">
           <!-- FORMULAIRE -->
@@ -271,7 +281,9 @@
             <div class="field">
               <label for="category">Personnage / Catégorie d'accueil</label>
               <select id="category"></select>
-              <p class="small">Mets exactement le même nom que sur la page d’accueil pour que ça tombe dans la bonne catégorie.</p>
+              <p class="small">
+                Mets exactement le même nom que sur la page d’accueil pour que ça tombe dans la bonne catégorie.
+              </p>
             </div>
 
             <div class="field">
@@ -293,7 +305,8 @@
             </button>
             <div class="status" id="status"></div>
             <p class="small">
-              Si tu veux aller plus vite, tu peux aussi utiliser ce panel sur ton PC, choisir les images déjà dans ton dossier BrainRot, et enchaîner les ajouts très rapidement.
+              Si tu veux aller plus vite, tu peux aussi utiliser ce panel sur ton PC, choisir les images déjà dans ton
+              dossier BrainRot, et enchaîner les ajouts très rapidement.
             </p>
           </div>
 
@@ -311,7 +324,13 @@
   </main>
 
   <script>
-    // mêmes personnages que dans products.js
+    // Déconnexion (point 5)
+    function logout(){
+      localStorage.removeItem("admin_token");
+      window.location.href = "/admin/login.html";
+    }
+
+    // mêmes personnages que sur la page d’accueil
     const BRAINROT_NAMES = [
       "Burguro and Fryuro",
       "Capitano Moby",
@@ -353,21 +372,6 @@
       "Tralaledon"
     ].sort((a,b)=>a.localeCompare(b));
 
-    const RAW_DIR = "Photo brainrot site";
-    const BASE = `../${encodeURIComponent(RAW_DIR)}/`;
-
-    function toSlug(name){
-      return name
-        .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-zA-Z0-9\\s]/g,"")
-        .trim()
-        .toLowerCase()
-        .replace(/\\s+/g,"-");
-    }
-    function imgUrlFromName(name,ext="webp"){
-      return BASE + toSlug(name) + "." + ext;
-    }
-
     const categorySelect = document.getElementById("category");
     const saveBtn        = document.getElementById("saveBtn");
     const statusEl       = document.getElementById("status");
@@ -378,7 +382,6 @@
     const prevImg        = document.getElementById("previewImg");
     const prevName       = document.getElementById("previewName");
 
-    // Remplir le select avec les persos
     BRAINROT_NAMES.forEach(n=>{
       const opt=document.createElement("option");
       opt.value=n;
@@ -406,11 +409,9 @@
       const price=(Number(p.price_eur||p.price)||0).toFixed(2).replace(".",",")+"€";
 
       let img=p.image;
-      if(!img && cat) img=imgUrlFromName(cat);
-
       return `
         <div class="item">
-          <img src="${img||""}" onerror="this.style.display='none'">
+          ${img ? `<img src="${img}" onerror="this.style.display='none'">` : ""}
           <div class="item-main">
             <div class="item-title">${title}</div>
             <div class="item-meta">${cat}</div>
@@ -438,6 +439,15 @@
       }
     }
 
+    function fileToDataURL(file){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=()=>resolve(reader.result);
+        reader.onerror=reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     saveBtn.addEventListener("click", async ()=>{
       const name   = document.getElementById("name").value.trim();
       const cat    = categorySelect.value;
@@ -449,11 +459,21 @@
         return;
       }
 
-      const fd = new FormData();
-      fd.append("name", name);
-      fd.append("category", cat);
-      fd.append("price", price);
-      fd.append("image", file);
+      let imageData;
+      try{
+        imageData = await fileToDataURL(file);
+      }catch(e){
+        console.error(e);
+        setStatus("Erreur lors de la lecture de l'image.", "err");
+        return;
+      }
+
+      const payload = {
+        name,
+        category: cat,
+        price,
+        image: imageData
+      };
 
       saveBtn.disabled=true;
       setStatus("Envoi en cours...", "");
@@ -461,32 +481,34 @@
       try{
         const res = await fetch("/.netlify/functions/admin-products", {
           method:"POST",
-          body:fd
+          headers: { "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
         });
         if(!res.ok){
+          const txt = await res.text();
+          console.error("HTTP error:", res.status, txt);
           throw new Error("HTTP "+res.status);
         }
         const data = await res.json();
         console.log("Admin save:", data);
-        setStatus("BrainRot enregistré.", "ok");
-
-        // reset rapide
-        document.getElementById("name").value="";
-        document.getElementById("price").value="";
-        fileInput.value="";
-        filePrev.style.display="none";
-
-        // refresh liste
-        refreshList();
+        if(!data.ok && !data.success){
+          setStatus("Erreur serveur (admin-products).", "err");
+        }else{
+          setStatus("BrainRot enregistré.", "ok");
+          document.getElementById("name").value="";
+          document.getElementById("price").value="";
+          fileInput.value="";
+          filePrev.style.display="none";
+          refreshList();
+        }
       }catch(e){
         console.error(e);
-        setStatus("Erreur serveur. Le backend Netlify attend les champs name, category, price et image.", "err");
+        setStatus("Erreur serveur. Vérifie la fonction admin-products sur Netlify.", "err");
       }finally{
         saveBtn.disabled=false;
       }
     });
 
-    // init
     refreshList();
   </script>
 </body>
