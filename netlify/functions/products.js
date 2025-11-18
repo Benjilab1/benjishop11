@@ -1,44 +1,72 @@
 // netlify/functions/products.js
-// Renvoie toute la liste des BrainRot stockés dans Netlify Blobs.
+// Retourne la liste de tous les BrainRot stockés dans Netlify Blobs
+// (store "brainrot-products")
 
 const { getStore } = require("@netlify/blobs");
 
+/**
+ * GET /.netlify/functions/products
+ * Réponse : { ok: true, items: [...] }
+ */
 exports.handler = async (event) => {
+  // On n’accepte que GET
   if (event.httpMethod !== "GET") {
     return {
       statusCode: 405,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ok: false,
+        error: "METHOD_NOT_ALLOWED",
+      }),
     };
   }
 
   try {
+    // Récupération du store Netlify Blobs
     const store = getStore("brainrot-products");
-    const list = await store.list();
+
+    // Liste des blobs existants
+    const listing = await store.list();
+    const blobs = Array.isArray(listing.blobs) ? listing.blobs : [];
 
     const items = [];
-    for (const blob of list.blobs) {
-      const raw = await store.get(blob.key);
-      if (!raw) continue;
-      try {
-        const obj = JSON.parse(raw);
-        items.push(obj);
-      } catch (e) {
-        console.warn("JSON invalide pour la clé", blob.key);
+
+    // Pour chaque clé, on récupère le JSON
+    for (const blob of blobs) {
+      const key = blob.key;
+      if (!key) continue;
+
+      const value = await store.get(key, { type: "json" }).catch(() => null);
+      if (value) {
+        items.push(value);
       }
     }
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, items }),
+      headers: {
+        "Content-Type": "application/json",
+        // (pas vraiment nécessaire vu que l’admin est sur le même domaine,
+        // mais ça ne fait pas de mal)
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({
+        ok: true,
+        items,
+      }),
     };
   } catch (err) {
-    console.error("Erreur products:", err);
+    console.error("Erreur dans la fonction products:", err);
+
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "SERVER_ERROR" }),
+      body: JSON.stringify({
+        ok: false,
+        error: "SERVER_ERROR",
+      }),
     };
   }
 };
