@@ -5,7 +5,6 @@
 const { getStore } = require("@netlify/blobs");
 
 exports.handler = async (event) => {
-  // On n'accepte que POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -25,7 +24,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         ok: false,
         error: "INVALID_JSON",
-        message: "Corps de requête JSON invalide.",
+        message: "Corps JSON invalide.",
       }),
     };
   }
@@ -35,14 +34,8 @@ exports.handler = async (event) => {
   const priceRaw = (body.price || "").toString().trim();
   const image = body.image || "";
 
-  // Vérif champs
   if (!name || !category || !priceRaw || !image) {
-    console.warn("Champs manquants:", {
-      name,
-      category,
-      priceRaw,
-      hasImage: !!image,
-    });
+    console.warn("Champs manquants:", { name, category, priceRaw, hasImage: !!image });
     return {
       statusCode: 400,
       headers: { "Content-Type": "application/json" },
@@ -54,7 +47,6 @@ exports.handler = async (event) => {
     };
   }
 
-  // Prix en nombre
   const priceValue = parseFloat(priceRaw.replace(",", "."));
   if (Number.isNaN(priceValue)) {
     return {
@@ -84,10 +76,7 @@ exports.handler = async (event) => {
     };
 
     await store.set(id, JSON.stringify(item), {
-      metadata: {
-        category,
-        title: name,
-      },
+      metadata: { category, title: name },
     });
 
     console.log("BrainRot enregistré:", item);
@@ -95,21 +84,14 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ok: true,
-        success: true,
-        item,
-      }),
+      body: JSON.stringify({ ok: true, success: true, item }),
     };
   } catch (err) {
     console.error("Erreur admin-products:", err);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ok: false,
-        error: "SERVER_ERROR",
-      }),
+      body: JSON.stringify({ ok: false, error: "SERVER_ERROR" }),
     };
   }
 };

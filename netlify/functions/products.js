@@ -14,7 +14,7 @@ exports.handler = async (event) => {
 
   try {
     const store = getStore("brainrot-products");
-    const list = await store.list(); // { blobs: [{ key, metadata... }, ...] }
+    const list = await store.list();
 
     const items = [];
     for (const blob of list.blobs) {

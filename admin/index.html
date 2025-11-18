@@ -159,12 +159,11 @@
 </head>
 <body>
   <script>
-    // Protection : si pas de token, on renvoie vers login
     if (localStorage.getItem("admin_token") !== "ok") {
       window.location.href = "/admin/login.html";
     }
   </script>
-
+  <!-- le reste de ton HTML panel ici -->
   <div class="topbar">
     <div class="logo">BENJI<span>SHOP</span></div>
     <button class="logout" onclick="logout()">Déconnexion</button>
