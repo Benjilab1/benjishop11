@@ -1,7 +1,16 @@
 // netlify/functions/admin-products.js
 // Reçoit un JSON { name, category, price, image(dataURL) } et stocke dans Netlify Blobs.
 
-const { getStore } = require("@netlify/blobs");
+const { Blobs } = require("@netlify/blobs");
+
+const blobs = new Blobs({
+  siteID: process.env.NETLIFY_BLOBS_SITEID,
+  token: process.env.NETLIFY_BLOBS_TOKEN
+});
+
+function getStore(name) {
+  return blobs.getStore(name);
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {

@@ -3,7 +3,16 @@
 // et renvoie la liste au frontend. En cas d'erreur, on renvoie quand même 200
 // pour éviter les 500 dans la console, mais avec ok:false.
 
-const { getStore } = require("@netlify/blobs");
+const { Blobs } = require("@netlify/blobs");
+
+const blobs = new Blobs({
+  siteID: process.env.NETLIFY_BLOBS_SITEID,
+  token: process.env.NETLIFY_BLOBS_TOKEN
+});
+
+function getStore(name) {
+  return blobs.getStore(name);
+}
 
 exports.handler = async (event) => {
   // On ne prend que GET

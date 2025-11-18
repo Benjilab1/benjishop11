@@ -1,7 +1,16 @@
 // netlify/functions/orders.js
 const { getStore } = require('@netlify/blobs');
 
-const ORDERS = getStore({ name: 'orders' });
+const { Blobs } = require("@netlify/blobs");
+
+const blobs = new Blobs({
+  siteID: process.env.NETLIFY_BLOBS_SITEID,
+  token: process.env.NETLIFY_BLOBS_TOKEN
+});
+
+function getStore(name) {
+  return blobs.getStore(name);
+}
 
 function json(status, body, extraHeaders={}) {
   return {

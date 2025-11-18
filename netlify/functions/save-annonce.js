@@ -1,27 +1,31 @@
-// netlify/functions/save-annonces.js
-import { writeFileSync } from "fs";
-import path from "path";
+const { getStore } = require("@netlify/blobs");
 
-export async function handler(event) {
+exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
   try {
     const data = JSON.parse(event.body || "{}");
-    const filePath = path.join(process.cwd(), "annonces.json");
 
-    writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    // Récupère le store "annonces"
+    const store = getStore("annonces-store");
+
+    // On sauvegarde sous la clé "all"
+    await store.set("all", JSON.stringify(data), {
+      metadata: { updated: new Date().toISOString() }
+    });
 
     return {
       statusCode: 200,
       body: JSON.stringify({ ok: true }),
     };
+
   } catch (err) {
-    console.error("Erreur sauvegarde annonces:", err);
+    console.error("Erreur save-annonce:", err);
     return {
       statusCode: 500,
-      body: "Erreur serveur",
+      body: JSON.stringify({ ok: false, error: "SERVER_ERROR" }),
     };
   }
-}
+};
