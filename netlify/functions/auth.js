@@ -25,7 +25,7 @@ exports.handler = async (event) => {
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
   if (!ADMIN_PASSWORD) {
-    console.error("ADMIN_PASSWORD manquant dans les variables Netlify");
+    console.error("ADMIN_PASSWORD manquant dans Netlify > Environment variables");
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },

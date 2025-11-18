@@ -4,377 +4,418 @@
   <meta charset="UTF-8">
   <title>Panel de vente BrainRot — BenjiShop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     :root{
       --bg:#050712;
       --panel:#0b1020;
-      --border:#1c2238;
+      --panel2:#101428;
       --accent:#00f5ff;
-      --accent-soft:rgba(0,245,255,.14);
+      --accent-soft:rgba(0,245,255,0.25);
       --text:#eef2ff;
       --muted:#9aa6c0;
+      --danger:#ff6b6b;
+      --radius:16px;
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
+
     body{
       min-height:100vh;
-      background:radial-gradient(circle at 0 0,#16193b 0,#050712 50%,#020309 100%);
-      color:var(--text);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      padding:18px;
+      background:radial-gradient(circle at 0% 0%,#141a3a 0,var(--bg) 55%);
+      color:var(--text);
+      padding:16px;
     }
+
     .topbar{
-      max-width:1100px;
-      margin:0 auto 18px;
       display:flex;
       justify-content:space-between;
       align-items:center;
+      margin-bottom:16px;
     }
     .logo{
       font-weight:800;
       letter-spacing:.18em;
-      font-size:16px;
+      text-transform:uppercase;
+      font-size:18px;
     }
-    .logo span{color:var(--accent);text-shadow:0 0 12px var(--accent-soft);}
+    .logo span{
+      color:var(--accent);
+      text-shadow:0 0 16px var(--accent-soft);
+    }
     .logout{
-      font-size:13px;
+      border:0;
       border-radius:999px;
-      padding:6px 10px;
-      border:1px solid rgba(255,255,255,.25);
-      background:transparent;
+      padding:7px 14px;
+      font-size:12px;
+      background:rgba(255,255,255,0.04);
       color:var(--muted);
       cursor:pointer;
     }
-    .wrap{
-      max-width:1100px;
-      margin:0 auto;
+
+    .grid{
       display:grid;
-      grid-template-columns: minmax(0,1.05fr) minmax(0,0.95fr);
+      grid-template-columns:minmax(0,1.1fr) minmax(0,1.1fr);
       gap:18px;
     }
+
     .panel{
-      background:var(--panel);
-      border-radius:18px;
+      background:linear-gradient(145deg,var(--panel),#080b1b);
+      border-radius:var(--radius);
       padding:18px 18px 20px;
-      border:1px solid var(--border);
-      box-shadow:0 18px 40px rgba(0,0,0,.8);
+      border:1px solid rgba(255,255,255,0.06);
+      box-shadow:0 20px 40px rgba(0,0,0,.85);
     }
+
     h2{
-      font-size:17px;
-      margin-bottom:4px;
+      font-size:18px;
+      margin-bottom:10px;
     }
     .subtitle{
       font-size:13px;
       color:var(--muted);
-      margin-bottom:12px;
+      margin-bottom:16px;
     }
+
     label{
       display:block;
       font-size:13px;
-      margin:10px 0 4px;
+      margin-bottom:6px;
+      color:var(--muted);
     }
     input, select{
       width:100%;
-      padding:8px 10px;
+      padding:9px 11px;
       border-radius:10px;
-      border:1px solid #252b45;
+      border:1px solid #262c4a;
       background:#050713;
       color:var(--text);
       font-size:14px;
+      margin-bottom:10px;
       outline:none;
     }
     input:focus, select:focus{
       border-color:var(--accent);
       box-shadow:0 0 0 1px var(--accent-soft);
     }
-    .help{
-      font-size:11px;
-      color:var(--muted);
+
+    .file-wrapper{
       margin-top:4px;
+      margin-bottom:10px;
     }
-    .file-row{
-      margin-top:8px;
-      font-size:13px;
-      color:var(--muted);
-    }
+
     button.primary{
-      margin-top:16px;
-      padding:9px 16px;
+      margin-top:6px;
       border-radius:999px;
       border:0;
-      background:linear-gradient(135deg,#00f5ff,#00aaff);
-      color:#02030a;
+      padding:9px 16px;
       font-weight:600;
+      background:linear-gradient(135deg,var(--accent),#00aaff);
+      color:#02030a;
       cursor:pointer;
-      box-shadow:0 0 18px rgba(0,245,255,.7);
+      box-shadow:0 0 18px var(--accent-soft);
     }
     button.primary:disabled{
       opacity:.6;
       cursor:wait;
       box-shadow:none;
     }
-    .msg{
-      margin-top:10px;
-      font-size:13px;
-    }
-    .msg.error{color:#ff6b6b;}
-    .msg.ok{color:#4ade80;}
-    .list-head{
+
+    .preview{
+      width:80px;
+      height:80px;
+      border-radius:12px;
+      overflow:hidden;
+      background:#050713;
+      border:1px solid #262c4a;
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      font-size:13px;
-      margin-bottom:6px;
+      justify-content:center;
+      margin-top:4px;
     }
-    .items{
+    .preview img{
+      max-width:100%;
+      max-height:100%;
+      object-fit:contain;
+    }
+
+    .error{
       margin-top:8px;
-      max-height:420px;
-      overflow:auto;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.06);
-      background:rgba(3,5,15,.85);
-      padding:8px;
       font-size:13px;
+      color:var(--danger);
     }
+    .success{
+      margin-top:8px;
+      font-size:13px;
+      color:#64e0a5;
+    }
+
+    .items-list{
+      max-height:460px;
+      overflow-y:auto;
+      padding-right:4px;
+    }
+
+    .empty{
+      font-size:13px;
+      color:var(--muted);
+      border-radius:12px;
+      border:1px dashed rgba(255,255,255,0.12);
+      padding:18px;
+    }
+
     .item{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      padding:6px 7px;
+      gap:10px;
+      padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,0.04);
+    }
+    .item:last-child{
+      border-bottom:none;
+    }
+    .item-thumb{
+      width:48px;
+      height:48px;
       border-radius:10px;
-      background:rgba(15,18,40,.9);
-      border:1px solid rgba(255,255,255,.06);
-      margin-bottom:5px;
+      overflow:hidden;
+      background:#050713;
+      border:1px solid #262c4a;
+      flex-shrink:0;
     }
-    .item span.cat{color:var(--muted);font-size:11px;}
-    .item span.price{font-weight:600;color:var(--accent);}
-    .empty-text{
-      font-size:13px;
+    .item-thumb img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+    .item-main{
+      flex:1;
+      min-width:0;
+    }
+    .item-title{
+      font-size:14px;
+      font-weight:600;
+    }
+    .item-meta{
+      font-size:12px;
       color:var(--muted);
-      padding:10px;
-    }
-    @media(max-width:900px){
-      .wrap{grid-template-columns:1fr;}
     }
   </style>
 </head>
 <body>
+  <!-- Protection : si pas de token, on redirige -->
   <script>
     if (localStorage.getItem("admin_token") !== "ok") {
       window.location.href = "/admin/login.html";
     }
   </script>
-  <!-- le reste de ton HTML panel ici -->
+
   <div class="topbar">
-    <div class="logo">BENJI<span>SHOP</span></div>
-    <button class="logout" onclick="logout()">Déconnexion</button>
+    <div class="logo"><span>BENJI</span>SHOP</div>
+    <button class="logout" onclick="localStorage.removeItem('admin_token');location.href='/'">
+      Déconnexion
+    </button>
   </div>
 
-  <div class="wrap">
-    <!-- Formulaire ajout -->
+  <div class="grid">
+    <!-- FORMULAIRE -->
     <div class="panel">
       <h2>Panel de vente BrainRot</h2>
       <div class="subtitle">
-        Ajoute un nouveau perso, choisis dans quelle <b>catégorie (personnage)</b> de la page d'accueil il apparaît, fixe le prix en € et ajoute son image.
+        Ajoute un nouveau BrainRot, choisis son personnage (catégorie d’accueil),
+        mets le prix en € et son image.
       </div>
 
-      <form id="form">
-        <label>Nom du BrainRot (variation / skin)</label>
-        <input id="name" required placeholder="Ex: Noa Lonfat">
+      <form id="brainrotForm">
+        <label for="name">Nom du BrainRot (variation / skin)</label>
+        <input id="name" name="name" placeholder="Ex: Noa Lonfat">
 
-        <label>Personnage / Catégorie d'accueil</label>
-        <select id="category" required>
-          <option value="">Choisis le perso…</option>
-          <option>Burguro and Fryuro</option>
-          <option>Capitano Moby</option>
-          <option>Celularcini Viciosini</option>
-          <option>Chillin Chili</option>
-          <option>Chipso and Queso</option>
-          <option>Dragon Cannelloni</option>
-          <option>Esok Sekolah</option>
-          <option>Eviledon</option>
-          <option>Fragrama and Chocrama</option>
-          <option>Garama and Madundung</option>
-          <option>Headless Horseman</option>
-          <option>Ketchuru and Musturu</option>
-          <option>Ketupat Kepat</option>
-          <option>La Casa Boo</option>
-          <option>La Extinct Grande</option>
-          <option>La Grande Combinasion</option>
-          <option>La Secret Combinasion</option>
-          <option>La Spooky Grande</option>
-          <option>Las Sis</option>
-          <option>La Supreme Combinasion</option>
-          <option>Los 67</option>
-          <option>Los Bros</option>
-          <option>Los Primos</option>
-          <option>Los Puggies</option>
-          <option>Los Spaghettis</option>
-          <option>Los Tacoritas</option>
-          <option>Meowl</option>
-          <option>Money Money Puggy</option>
-          <option>Nuclearo Dinossauro</option>
-          <option>Spaghetti Tualetti</option>
-          <option>Spooky and Pumpky</option>
-          <option>Strawberry Elephant</option>
-          <option>Tacorita Bicicleta</option>
-          <option>Tang Tang Keletang</option>
-          <option>Tictac Sahur</option>
-          <option>Tralaledon</option>
-        </select>
-        <div class="help">
-          Mets exactement le même nom que sur la page d'accueil pour que ça tombe dans la bonne catégorie.
-        </div>
+        <label for="category">Personnage / Catégorie d’accueil</label>
+        <select id="category" name="category"></select>
 
-        <label>Prix (€)</label>
-        <input id="price" required type="number" step="0.01" min="0" placeholder="Ex: 12">
+        <label for="price">Prix (€)</label>
+        <input id="price" name="price" type="number" step="0.01" min="0">
 
         <label>Image (depuis ton PC)</label>
-        <input id="file" type="file" accept="image/*" required>
-        <div class="file-row" id="fileInfo">Aucune image sélectionnée.</div>
+        <div class="file-wrapper">
+          <input id="image" type="file" accept="image/*">
+        </div>
+        <div class="preview" id="preview"><span style="font-size:11px;color:#555">Aperçu</span></div>
 
         <button type="submit" class="primary" id="submitBtn">Enregistrer le BrainRot</button>
-        <div class="help">
-          Si tu veux aller plus vite, tu peux aussi utiliser ce panel sur ton PC, choisir les images déjà dans ton dossier BrainRot, et enchainer les ajouts très rapidement.
-        </div>
-        <div id="msg" class="msg"></div>
+
+        <div id="status" class="error" style="display:none"></div>
       </form>
     </div>
 
-    <!-- Liste existante -->
+    <!-- LISTE -->
     <div class="panel">
-      <div class="list-head">
-        <div>
-          <h2>BrainRot actuellement en vente</h2>
-          <div class="subtitle">Liste chargée via la fonction Netlify <code>products</code>.</div>
-        </div>
-        <div style="font-size:12px;color:var(--muted)"><span id="count">0</span> items</div>
-      </div>
-      <div id="items" class="items">
-        <div class="empty-text">Chargement…</div>
+      <h2>BrainRot actuellement en vente</h2>
+      <div class="subtitle">Liste chargée via la fonction Netlify <code>products</code>.</div>
+      <div id="items" class="items-list">
+        <div class="empty">Chargement...</div>
       </div>
     </div>
   </div>
 
+  <!-- Noms de persos -->
+  <script src="../brainrot-names.js"></script>
+
   <script>
-    function logout(){
-      localStorage.removeItem("admin_token");
-      window.location.href = "/admin/login.html";
-    }
-
-    const fileInput = document.getElementById("file");
-    const fileInfo = document.getElementById("fileInfo");
-    const form = document.getElementById("form");
-    const msgEl = document.getElementById("msg");
+    const catSelect = document.getElementById("category");
+    const preview = document.getElementById("preview");
+    const imgInput = document.getElementById("image");
+    const form = document.getElementById("brainrotForm");
+    const statusEl = document.getElementById("status");
     const submitBtn = document.getElementById("submitBtn");
-    const itemsEl = document.getElementById("items");
-    const countEl = document.getElementById("count");
+    const itemsRoot = document.getElementById("items");
 
-    let currentImageDataUrl = "";
+    // Remplit la liste des persos
+    (function fillCategories(){
+      const names = (window.BRAINROT_NAMES || []).slice().sort((a,b)=>a.localeCompare(b));
+      catSelect.innerHTML = "";
+      for (const n of names){
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = n;
+        catSelect.appendChild(opt);
+      }
+    })();
 
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files[0];
-      if (!file){
-        fileInfo.textContent = "Aucune image sélectionnée.";
-        currentImageDataUrl = "";
+    // Aperçu image
+    imgInput.addEventListener("change", () => {
+      const file = imgInput.files[0];
+      if (!file) {
+        preview.innerHTML = "<span style='font-size:11px;color:#555'>Aperçu</span>";
         return;
       }
-      fileInfo.textContent = file.name;
-
       const reader = new FileReader();
       reader.onload = () => {
-        currentImageDataUrl = reader.result; // data URL
+        preview.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = reader.result;
+        preview.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
 
-    async function loadItems(){
-      itemsEl.innerHTML = "<div class='empty-text'>Chargement…</div>";
-      countEl.textContent = "0";
+    // Convertit un File -> dataURL (promise)
+    function fileToDataURL(file){
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onerror = reject;
+        fr.onload = () => resolve(fr.result);
+        fr.readAsDataURL(file);
+      });
+    }
+
+    // Chargement liste
+    async function refreshList(){
       try{
         const res = await fetch("/.netlify/functions/products");
-        if (!res.ok){
-          throw new Error("HTTP " + res.status);
-        }
-        const data = await res.json().catch(()=>({}));
-        const items = (data.items || []).sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
-
-        countEl.textContent = items.length.toString();
-
-        if (!items.length){
-          itemsEl.innerHTML = "<div class='empty-text'>Aucun BrainRot en vente pour l'instant.</div>";
+        if(!res.ok){
+          console.error("Erreur HTTP products", res.status);
+          itemsRoot.innerHTML = `<div class="empty">Impossible de charger la liste (HTTP ${res.status}).</div>`;
           return;
         }
-
-        itemsEl.innerHTML = items.map(p => `
-          <div class="item">
-            <div>
-              <div>${p.title || p.category || "Sans nom"}</div>
-              <span class="cat">${p.category || "?"}</span>
-            </div>
-            <span class="price">${(Number(p.price_eur)||0).toFixed(2).replace(".", ",")} €</span>
-          </div>
-        `).join("");
+        const data = await res.json();
+        const items = (data && data.items) || [];
+        if (!items.length){
+          itemsRoot.innerHTML = `<div class="empty">Aucun BrainRot en vente pour l’instant.</div>`;
+          return;
+        }
+        itemsRoot.innerHTML = "";
+        // Affiche du plus récent au plus ancien
+        items.sort((a,b)=> (b.createdAt||"").localeCompare(a.createdAt||""));
+        for (const p of items){
+          const div = document.createElement("div");
+          div.className = "item";
+          const thumb = document.createElement("div");
+          thumb.className = "item-thumb";
+          const img = document.createElement("img");
+          img.src = p.image || "";
+          img.onerror = () => { img.style.display="none"; };
+          thumb.appendChild(img);
+          const main = document.createElement("div");
+          main.className = "item-main";
+          const title = document.createElement("div");
+          title.className = "item-title";
+          title.textContent = p.title || "(sans nom)";
+          const meta = document.createElement("div");
+          meta.className = "item-meta";
+          meta.textContent = `${p.category || "?"} — ${ (p.price_eur ?? 0).toFixed(2) } €`;
+          main.appendChild(title);
+          main.appendChild(meta);
+          div.appendChild(thumb);
+          div.appendChild(main);
+          itemsRoot.appendChild(div);
+        }
       }catch(err){
-        console.error("Erreur chargement items:", err);
-        itemsEl.innerHTML = "<div class='empty-text'>Impossible de charger la liste (fonction Netlify products).</div>";
+        console.error(err);
+        itemsRoot.innerHTML = `<div class="empty">Erreur serveur en chargeant la liste.</div>`;
       }
     }
 
+    refreshList();
+
+    // Soumission du formulaire
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      msgEl.textContent = "";
-      msgEl.className = "msg";
-      submitBtn.disabled = true;
+      statusEl.style.display = "none";
+      statusEl.className = "error";
 
       const name = document.getElementById("name").value.trim();
-      const category = document.getElementById("category").value.trim();
+      const category = catSelect.value;
       const price = document.getElementById("price").value.trim();
+      const file = imgInput.files[0];
 
-      if (!currentImageDataUrl){
-        msgEl.textContent = "Choisis d'abord une image.";
-        msgEl.classList.add("error");
-        submitBtn.disabled = false;
+      if (!name || !category || !price || !file){
+        statusEl.textContent = "Remplis tous les champs et choisis une image.";
+        statusEl.style.display = "block";
         return;
       }
 
-      const payload = {
-        name,
-        category,
-        price,
-        image: currentImageDataUrl
-      };
+      submitBtn.disabled = true;
 
       try{
+        const imageDataURL = await fileToDataURL(file);
+
         const res = await fetch("/.netlify/functions/admin-products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({
+            name,
+            category,
+            price,
+            image:imageDataURL
+          })
         });
 
-        const data = await res.json().catch(()=>({}));
+        const data = await res.json().catch(()=> ({}));
 
-        if (res.ok && data.ok){
-          msgEl.textContent = "BrainRot enregistré avec succès.";
-          msgEl.classList.add("ok");
+        if (!res.ok || !data.ok){
+          console.error("Erreur admin-products:", res.status, data);
+          statusEl.textContent =
+            (data && data.message) ||
+            "Erreur serveur. Vérifie la fonction admin-products sur Netlify.";
+          statusEl.style.display = "block";
+        } else {
+          statusEl.textContent = "BrainRot enregistré avec succès.";
+          statusEl.className = "success";
+          statusEl.style.display = "block";
           form.reset();
-          fileInfo.textContent = "Aucune image sélectionnée.";
-          currentImageDataUrl = "";
-          await loadItems();
-        }else{
-          console.error("Réponse erreur admin-products:", data);
-          msgEl.textContent = "Erreur serveur. Vérifie la fonction admin-products sur Netlify.";
-          msgEl.classList.add("error");
+          preview.innerHTML = "<span style='font-size:11px;color:#555'>Aperçu</span>";
+          refreshList();
         }
       }catch(err){
-        console.error("Erreur fetch admin-products:", err);
-        msgEl.textContent = "Erreur serveur. Vérifie la fonction admin-products sur Netlify.";
-        msgEl.classList.add("error");
+        console.error(err);
+        statusEl.textContent = "Erreur réseau/serveur.";
+        statusEl.style.display = "block";
       }finally{
         submitBtn.disabled = false;
       }
     });
-
-    loadItems();
   </script>
 </body>
 </html>

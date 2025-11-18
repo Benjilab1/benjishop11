@@ -88,7 +88,7 @@
   </div>
 
   <script>
-    // Si déjà loggé → redirige vers le panel
+    // Déjà connecté ? -> redirection directe
     if (localStorage.getItem("admin_token") === "ok") {
       window.location.href = "/admin/";
     }

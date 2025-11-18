@@ -1,5 +1,5 @@
 // netlify/functions/products.js
-// Renvoie la liste complète des BrainRot stockés dans Netlify Blobs.
+// Renvoie toute la liste des BrainRot stockés dans Netlify Blobs.
 
 const { getStore } = require("@netlify/blobs");
 
@@ -21,8 +21,8 @@ exports.handler = async (event) => {
       const raw = await store.get(blob.key);
       if (!raw) continue;
       try {
-        const parsed = JSON.parse(raw);
-        items.push(parsed);
+        const obj = JSON.parse(raw);
+        items.push(obj);
       } catch (e) {
         console.warn("JSON invalide pour la clé", blob.key);
       }

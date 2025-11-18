@@ -1,6 +1,5 @@
 // netlify/functions/admin-products.js
-// Reçoit un JSON { name, category, price, image (data URL) }
-// et stocke le BrainRot dans Netlify Blobs.
+// Reçoit un JSON { name, category, price, image(dataURL) } et stocke dans Netlify Blobs.
 
 const { getStore } = require("@netlify/blobs");
 
@@ -31,11 +30,11 @@ exports.handler = async (event) => {
 
   const name = (body.name || "").trim();
   const category = (body.category || "").trim();
-  const priceRaw = (body.price || "").toString().trim();
+  const rawPrice = (body.price || "").toString().trim();
   const image = body.image || "";
 
-  if (!name || !category || !priceRaw || !image) {
-    console.warn("Champs manquants:", { name, category, priceRaw, hasImage: !!image });
+  if (!name || !category || !rawPrice || !image) {
+    console.warn("Champs manquants:", { name, category, rawPrice, hasImage: !!image });
     return {
       statusCode: 400,
       headers: { "Content-Type": "application/json" },
@@ -47,7 +46,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const priceValue = parseFloat(priceRaw.replace(",", "."));
+  const priceValue = parseFloat(rawPrice.replace(",", "."));
   if (Number.isNaN(priceValue)) {
     return {
       statusCode: 400,
@@ -71,7 +70,7 @@ exports.handler = async (event) => {
       title: name,
       category,
       price_eur: priceValue,
-      image, // data URL envoyée par le front
+      image, // data URL
       createdAt: new Date().toISOString(),
     };
 
