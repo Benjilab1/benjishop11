@@ -1,38 +1,17 @@
-// netlify/functions/auth.js
-// Vérifie le mot de passe admin envoyé en JSON { password }
-
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
-    return {
-      statusCode: 405,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "METHOD_NOT_ALLOWED" }),
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  let body;
-  try {
-    body = JSON.parse(event.body || "{}");
-  } catch (e) {
-    return {
-      statusCode: 400,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: "INVALID_JSON" }),
-    };
-  }
-
-  const password = (body.password || "").trim();
+  const { password } = JSON.parse(event.body || "{}");
   const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
   if (!ADMIN_PASSWORD) {
-    console.error("ADMIN_PASSWORD manquant dans Netlify > Environment variables");
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ok: false,
-        error: "SERVER_CONFIG",
-        message: "ADMIN_PASSWORD non configuré sur Netlify",
+        error: "NO_ADMIN_PASSWORD",
       }),
     };
   }
@@ -40,14 +19,12 @@ exports.handler = async (event) => {
   if (password === ADMIN_PASSWORD) {
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, success: true }),
+      body: JSON.stringify({ ok: true }),
     };
   }
 
   return {
     statusCode: 401,
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ ok: false, error: "BAD_PASSWORD" }),
   };
 };

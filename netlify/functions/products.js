@@ -1,79 +1,63 @@
 // netlify/functions/products.js
-// Lit les BrainRot stockés dans le store "brainrot-products" (Netlify Blobs)
-// et renvoie la liste au frontend. En cas d'erreur, on renvoie quand même 200
-// pour éviter les 500 dans la console, mais avec ok:false.
+// Liste tous les BrainRot stockés dans Netlify Blobs.
 
-const { Blobs } = require("@netlify/blobs");
+const { getStore } = require("@netlify/blobs");
 
-const blobs = new Blobs({
-  siteID: process.env.NETLIFY_BLOBS_SITEID,
-  token: process.env.NETLIFY_BLOBS_TOKEN
-});
+// Utilise la config manuelle via les variables d'environnement
+function getBrainrotStore() {
+  const siteID = process.env.NETLIFY_BLOBS_SITE_ID;
+  const token = process.env.NETLIFY_BLOBS_TOKEN;
 
-function getStore(name) {
-  return blobs.getStore(name);
-}
-
-exports.handler = async (event) => {
-  // On ne prend que GET
-  if (event.httpMethod !== "GET") {
-    return {
-      statusCode: 405,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        ok: false,
-        error: "METHOD_NOT_ALLOWED",
-      }),
-    };
+  if (!siteID || !token) {
+    throw new Error(
+      "Missing blobs credentials: NETLIFY_BLOBS_SITE_ID or NETLIFY_BLOBS_TOKEN is not defined."
+    );
   }
 
+  // Configuration manuelle : plus besoin que Netlify active Blobs tout seul
+  return getStore({
+    name: "brainrot-products",
+    siteID,
+    token,
+  });
+}
+
+exports.handler = async () => {
   try {
-    const store = getStore("brainrot-products");
+    const store = getBrainrotStore();
 
     // Liste des blobs
-    const { blobs } = await store.list();
+    const list = await store.list();
     const items = [];
 
-    for (const blob of blobs) {
-      try {
-        const raw = await store.get(blob.key, { type: "text" });
-        if (!raw) continue;
-        const parsed = JSON.parse(raw);
-        items.push(parsed);
-      } catch (err) {
-        console.error("Erreur en lisant un blob:", blob.key, err);
-        // si un blob est cassé, on l'ignore mais on continue les autres
+    if (Array.isArray(list.blobs)) {
+      for (const blob of list.blobs) {
+        try {
+          const value = await store.get(blob.key, { type: "json" });
+          if (value) items.push(value);
+        } catch (e) {
+          console.error("Erreur lecture blob", blob.key, e);
+        }
       }
     }
 
     return {
       statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ok: true,
         items,
       }),
     };
   } catch (err) {
-    console.error("Erreur products():", err);
-    // IMPORTANT : on renvoie 200 pour éviter les 500,
-    // mais on signale l'erreur dans le JSON.
+    console.error("Erreur products.js :", err);
     return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-      },
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ok: false,
         error: "SERVER_ERROR",
-        message: String(err),
+        message: String(err && err.message ? err.message : err),
         items: [],
       }),
     };
